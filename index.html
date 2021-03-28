@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beales Images</title>
+    <link rel="stylesheet" href="./assets/styles/style.css">
+</head>
+
+<body>
+    <button id='photos'>Photos</button>
+    <button id='directory'>Directory</button>
+    <button id='albums'>Albums</button>
+
+    <div id="photoControls" class="hidden">
+        <h1 id="pageNumber"></h1>
+        <button id="back">Back</button>
+        <button id="next">Next</button>
+    </div>
+
+    <div id="container"></div>
+
+    <script>
+        const pageIncrement = 3;
+        let start = 0;
+
+        const backButton = document.querySelector('#back');
+        const nextButton = document.querySelector('#next');
+        const directoryButton = document.querySelector('#directory');
+        const photosButton = document.querySelector('#photos');
+        const photoControls = document.querySelector('#photoControls')
+
+        photosButton.addEventListener('click', async () => {
+            this.printPage();
+            photoControls.classList.remove('hidden');
+            let page = await fetch(`http://192.168.43.253:8080/images?start=${start}&number=3`);
+            let content = await page.text();
+            document.querySelector('#container').innerHTML = content;
+        });
+
+        backButton.addEventListener('click', async () => {
+            this.changePage({ forward: false });
+            this.printPage();
+            let page = await fetch(`http://192.168.43.253:8080/images?start=${start}&number=3`);
+            let content = await page.text();
+            document.querySelector('#container').innerHTML = content;
+        });
+
+        nextButton.addEventListener('click', async () => {
+            this.changePage({ forward: true });
+            this.printPage();
+            let page = await fetch(`http://192.168.43.253:8080/images?start=${start}&number=${3}`);
+            let content = await page.text();
+            document.querySelector('#container').innerHTML = content;
+        });
+        
+        changePage = (option) => {
+            if (option.forward)
+                start += pageIncrement;
+            else
+                start -= pageIncrement;
+        }
+
+        printPage = () => {
+            document.querySelector('#pageNumber').innerHTML = `Page: ${Math.floor(start / pageIncrement)}`;
+        }
+
+        directoryButton.addEventListener('click', async () => {
+            photoControls.classList.add('hidden');
+
+            let request = await fetch(`http://192.168.43.253:8080/listDirectory`);
+            let directory = JSON.parse(await request.json());
+            directory.forEach((dir) => {
+                document.querySelector('#container').innerHTML += `<a>${dir}</a>`
+            })
+        });
+
+    </script>
+</body>
+
+</html>

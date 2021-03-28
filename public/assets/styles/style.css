@@ -1,0 +1,35 @@
+.hidden {
+  display: none;
+}
+
+div.gallery {
+  border: 1px solid #ccc;
+  width: 200px;
+}
+
+div.gallery:hover {
+  border: 1px solid #777;
+}
+
+div.gallery img {
+  float: left;
+  width:  200px;
+  height: 200px;
+  object-fit: cover;
+}
+
+div.desc {
+  text-align: center;
+}
+
+.responsive {
+  padding: 6px;
+  float: left;
+  width: 200px;
+}
+
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}

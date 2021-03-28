@@ -1,0 +1,16 @@
+{
+  "name": "my-local-server",
+  "version": "1",
+  "description": "a local server for the network",
+  "author": "david beales",
+  "license": "MIT",
+  "scripts": {
+    "build": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "glob": "^7.1.6",
+    "node-html-parser": "^3.1.2"
+  }
+}
