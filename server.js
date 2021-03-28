@@ -9,12 +9,12 @@ function getDirectories(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).filter(v => v.isDirectory()).map(v => [dir, v.name].join(path.sep));
 }
 
-function getDirectoryListing(dir) {
-    return fs.readdirSync(dir, { withFileTypes: true }).map(file => file.name);
-}
-
 function getDirectoriesRecursive(dir) {
     return [dir, ...getDirectories(dir).map(getDirectoriesRecursive).flat()];
+}
+
+function getDirectoryListing(dir) {
+    return fs.readdirSync(dir, { withFileTypes: true }).map(v => path.normalize([dir, v.name].join(path.sep)));
 }
 
 class BuildPages {
@@ -104,16 +104,23 @@ class Server {
 
         app.get('/listDirectory', async (req, res) => {
             try {
+                // todo - only show image assets and folders, i.e. remove secrets.js, or remove secrets from public access 
+
                 const params = req.query;
                 const rawDir = params.dir ?? 'assets';
 
-                const directory = [__dirname, 'public', rawDir.split(',')].flat().join(path.sep);
                 const validDirectories = getDirectoriesRecursive([__dirname, 'public', 'assets'].join(path.sep), []);
+
+                const directory = [__dirname, 'public', rawDir.split(',')].flat().join(path.sep);
 
                 if (!validDirectories.includes(directory))
                     res.status(400).send('Invalid path');
 
-                const files = getDirectoryListing(directory);
+                const baseDirectory = path.normalize([__dirname, 'public', ''].join(path.sep));
+
+                const files = getDirectoryListing(directory).map((file)=>{
+                    return file.replace(baseDirectory, '');
+                });
 
                 res.writeHeader(200, { "Content-Type": "text" });
                 res.write(JSON.stringify(files));

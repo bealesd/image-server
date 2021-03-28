@@ -21,7 +21,11 @@
 
     <div id="container"></div>
 
-    <script>
+    <script type="module">
+        import {
+            Secrets
+        } from './assets/secrets.js';
+        const ipAddress = new Secrets().ipAddress;
         const pageIncrement = 3;
         let start = 0;
 
@@ -31,51 +35,58 @@
         const photosButton = document.querySelector('#photos');
         const photoControls = document.querySelector('#photoControls')
 
-        photosButton.addEventListener('click', async () => {
-            this.printPage();
-            photoControls.classList.remove('hidden');
-            let page = await fetch(`http://192.168.43.253:8080/images?start=${start}&number=3`);
-            let content = await page.text();
-            document.querySelector('#container').innerHTML = content;
-        });
-
-        backButton.addEventListener('click', async () => {
-            this.changePage({ forward: false });
-            this.printPage();
-            let page = await fetch(`http://192.168.43.253:8080/images?start=${start}&number=3`);
-            let content = await page.text();
-            document.querySelector('#container').innerHTML = content;
-        });
-
-        nextButton.addEventListener('click', async () => {
-            this.changePage({ forward: true });
-            this.printPage();
-            let page = await fetch(`http://192.168.43.253:8080/images?start=${start}&number=${3}`);
-            let content = await page.text();
-            document.querySelector('#container').innerHTML = content;
-        });
-        
-        changePage = (option) => {
+        function changePage(option) {
             if (option.forward)
                 start += pageIncrement;
             else
                 start -= pageIncrement;
         }
 
-        printPage = () => {
+        function printPage () {
             document.querySelector('#pageNumber').innerHTML = `Page: ${Math.floor(start / pageIncrement)}`;
         }
 
-        directoryButton.addEventListener('click', async () => {
-            photoControls.classList.add('hidden');
-
-            let request = await fetch(`http://192.168.43.253:8080/listDirectory`);
-            let directory = await request.json()
-            directory.forEach((dir) => {
-                document.querySelector('#container').innerHTML += `<div><a href="#">${dir}</a></div>`
-            })
+        photosButton.addEventListener('click', async() => {
+            printPage();
+            photoControls.classList.remove('hidden');
+            let page = await fetch(`http://${ipAddress}:8080/images?start=${start}&number=3`);
+            let content = await page.text();
+            document.querySelector('#container').innerHTML = content;
         });
 
+        backButton.addEventListener('click', async() => {
+            changePage({
+                forward: false
+            });
+            printPage();
+            let page = await fetch(`http://${ipAddress}:8080/images?start=${start}&number=3`);
+            let content = await page.text();
+            document.querySelector('#container').innerHTML = content;
+        });
+
+        nextButton.addEventListener('click', async() => {
+            changePage({
+                forward: true
+            });
+            printPage();
+            let page = await fetch(`http://${ipAddress}:8080/images?start=${start}&number=${3}`);
+            let content = await page.text();
+            document.querySelector('#container').innerHTML = content;
+        });
+
+
+
+        directoryButton.addEventListener('click', async() => {
+            photoControls.classList.add('hidden');
+
+            let request = await fetch(`http://${ipAddress}:8080/listDirectory`);
+            let directory = await request.json();
+            document.querySelector('#container').innerHTML = '';
+            directory.forEach((dir) => {
+                const href = `http://${ipAddress}:8080/listDirectory?dir=${dir}`;
+                document.querySelector('#container').innerHTML += `<div><a href="${href}">${dir}</a></div>`
+            })
+        });
     </script>
 </body>
 
