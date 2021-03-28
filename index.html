@@ -70,9 +70,9 @@
             photoControls.classList.add('hidden');
 
             let request = await fetch(`http://192.168.43.253:8080/listDirectory`);
-            let directory = JSON.parse(await request.json());
+            let directory = await request.json()
             directory.forEach((dir) => {
-                document.querySelector('#container').innerHTML += `<a>${dir}</a>`
+                document.querySelector('#container').innerHTML += `<div><a href="#">${dir}</a></div>`
             })
         });
 
