@@ -22,10 +22,13 @@
     <div id="container"></div>
 
     <script type="module">
-        import {
-            Secrets
-        } from './assets/secrets.js';
-        const ipAddress = new Secrets().ipAddress;
+        import { Config } from '/config.js';
+
+        let ipAddress = new Config().ipAddress;
+        ipAddress = 'localhost';
+        const port = new Config().port;
+        const baseUrl = `http://${ipAddress}:${port}`;
+
         const pageIncrement = 3;
         let start = 0;
 
@@ -46,12 +49,33 @@
             document.querySelector('#pageNumber').innerHTML = `Page: ${Math.floor(start / pageIncrement)}`;
         }
 
+        async function getImages(){
+            let req = await fetch(`${baseUrl}/images?start=${start}&number=3`);
+            let images = await req.json();
+            let content = '';
+
+            Object.keys(images).forEach((img)=>{
+                const image = images[img];
+                let imageDiv = `<div class="responsive">
+                    <div class="gallery">
+                        <a target="" href="image?id=${img}">
+                            <img src="image?id=${img}" alt="${image.mageName}" width="600" height="400">
+                        </a>
+                        <div class="desc">${image.day}/${image.month}/${image.year}</div>
+                    </div>
+                </div>`;
+                content += imageDiv;
+            })
+
+
+            document.querySelector('#container').innerHTML = content;
+        }
+
         photosButton.addEventListener('click', async() => {
             printPage();
             photoControls.classList.remove('hidden');
-            let page = await fetch(`http://${ipAddress}:8080/images?start=${start}&number=3`);
-            let content = await page.text();
-            document.querySelector('#container').innerHTML = content;
+            await getImages();
+
         });
 
         backButton.addEventListener('click', async() => {
@@ -59,9 +83,7 @@
                 forward: false
             });
             printPage();
-            let page = await fetch(`http://${ipAddress}:8080/images?start=${start}&number=3`);
-            let content = await page.text();
-            document.querySelector('#container').innerHTML = content;
+            await getImages();
         });
 
         nextButton.addEventListener('click', async() => {
@@ -69,21 +91,17 @@
                 forward: true
             });
             printPage();
-            let page = await fetch(`http://${ipAddress}:8080/images?start=${start}&number=${3}`);
-            let content = await page.text();
-            document.querySelector('#container').innerHTML = content;
+            await getImages();
         });
-
-
 
         directoryButton.addEventListener('click', async() => {
             photoControls.classList.add('hidden');
 
-            let request = await fetch(`http://${ipAddress}:8080/listDirectory`);
+            let request = await fetch(`${baseUrl}/listDirectory`);
             let directory = await request.json();
             document.querySelector('#container').innerHTML = '';
             directory.forEach((dir) => {
-                const href = `http://${ipAddress}:8080/listDirectory?dir=${dir}`;
+                const href = `${baseUrl}/listDirectory?dir=${dir}`;
                 document.querySelector('#container').innerHTML += `<div><a href="${href}">${dir}</a></div>`
             })
         });
