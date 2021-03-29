@@ -98,12 +98,27 @@
             photoControls.classList.add('hidden');
 
             let request = await fetch(`${baseUrl}/listDirectory`);
-            let directory = await request.json();
+            let directories = await request.json();
             document.querySelector('#container').innerHTML = '';
-            directory.forEach((dir) => {
-                const href = `${baseUrl}/listDirectory?dir=${dir}`;
-                document.querySelector('#container').innerHTML += `<div><a href="${href}">${dir}</a></div>`
-            })
+
+            let content = '';
+
+            Object.keys(directories).forEach((dir)=>{
+                const directory = directories[dir];
+                let href = '';
+                if (directory.isFile){
+                    href = `${baseUrl}/image?id=${dir}`;
+                }
+                else {
+                    href = `${baseUrl}/listDirectory?dir=${dir}`;
+                }
+                
+                let dirDiv = `<div><a href="${href}">${dir}</a></div>`;
+                content += dirDiv;
+            });
+
+            document.querySelector('#container').innerHTML = content;
+
         });
     </script>
 </body>

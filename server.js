@@ -18,24 +18,31 @@ function getDirectoriesRecursive(dir) {
 }
 
 function getDirectoryListing(dir) {
-    return fs.readdirSync(dir, { withFileTypes: true }).map(v => path.normalize([dir, v.name].join(path.sep)));
+    return fs.readdirSync(dir, { withFileTypes: true })
+        .map((v) => {
+            return {
+                isFile: v.isFile(),
+                name: v.name,
+                id: path.normalize([dir, v.name].join(path.sep).replace(__dirname, '')).slice(1)
+            };
+        });
 }
 
 class BuildPages {
-    generateConfig(){
-        const config = 
-        `export class Config {
+    generateConfig() {
+        const config =
+            `export class Config {
             ipAddress = '${ipAddress}';
             port =  '${port}';
         }`
-        fs.writeFileSync([__dirname, 'public', 'config.js'].join(path.sep), config, {flag: 'w'});
+        fs.writeFileSync([__dirname, 'public', 'config.js'].join(path.sep), config, { flag: 'w' });
     }
 
     getImages(startIndex, number) {
         const images = glob.sync([__dirname, 'images', '*.jpg'].join(path.sep));
         const imagesJson = {};
-        
-        if(startIndex < 0 || startIndex > images.length -1 ){
+
+        if (startIndex < 0 || startIndex > images.length - 1) {
             return {};
         }
 
@@ -67,7 +74,7 @@ class BuildPages {
 }
 
 class Server {
-    constructor(){
+    constructor() {
         this.buildPages = new BuildPages();
         this.buildPages.generateConfig();
     }
@@ -96,11 +103,12 @@ class Server {
 
         app.get('/image', async (req, res) => {
             try {
+                // get image
                 const params = req.query;
                 const imageId = params.id;
 
                 const img = fs.readFileSync(imageId);
-                res.writeHead(200, {'Content-Type': 'image/jpeg' });
+                res.writeHead(200, { 'Content-Type': 'image/jpeg' });
                 res.end(img, 'binary');
             } catch (error) {
                 res.status(400).send(error.message);
@@ -109,6 +117,7 @@ class Server {
 
         app.get('/images', async (req, res) => {
             try {
+                //list images
                 const params = req.query;
                 const startIndex = parseInt(params.start);
                 const number = parseInt(params.number);
@@ -124,24 +133,33 @@ class Server {
 
         app.get('/listDirectory', async (req, res) => {
             try {
+                // list image directory
+                // return directory and if file or folder
                 const params = req.query;
-                const rawDir = params.dir ?? 'assets';
+                const rawDir = params.dir ?? 'images';
+                const directory = [__dirname, rawDir.split(',')].flat().join(path.sep);
 
-                const validDirectories = getDirectoriesRecursive([__dirname, 'public', 'assets'].join(path.sep), []);
+                const validDirectories = getDirectoriesRecursive([__dirname, 'images'].join(path.sep), []);
 
-                const directory = [__dirname, 'public', rawDir.split(',')].flat().join(path.sep);
-
-                if (!validDirectories.includes(directory))
+                if (!validDirectories.includes(directory)) {
                     res.status(400).send('Invalid path');
+                    res.end();
+                    return;
+                }
 
-                const baseDirectory = path.normalize([__dirname, 'public', ''].join(path.sep));
 
-                const files = getDirectoryListing(directory).map((file)=>{
-                    return file.replace(baseDirectory, '');
+                const baseDirectory = path.normalize([__dirname, ''].join(path.sep));
+                
+                const fileJson = {};
+                const files = getDirectoryListing(directory).forEach((file) => {
+                    fileJson[file.id] = {
+                        isFile: file.isFile,
+                        name: file.name.replace(baseDirectory, '')
+                    }
                 });
 
-                res.writeHeader(200, { "Content-Type": "text" });
-                res.write(JSON.stringify(files));
+                // res.writeHeader(200, { "Content-Type": "text" });
+                res.json(fileJson);
                 res.end();
             } catch (error) {
                 res.status(400).send(error.message);
@@ -149,9 +167,9 @@ class Server {
         })
 
         app.all('*', (req, res, next) => {
-            
-            const url = path.normalize([__dirname, 'public',req.url].join(path.sep));
-            if(fs.existsSync(url)){
+
+            const url = path.normalize([__dirname, 'public', req.url].join(path.sep));
+            if (fs.existsSync(url)) {
                 res.sendFile(path.resolve(url));
                 res.end();
             }
