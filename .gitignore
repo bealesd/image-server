@@ -1,5 +1,5 @@
-# secret
-secrets.js
+# local image folder at root
+images/**
 
 # Logs
 logs

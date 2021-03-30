@@ -146,19 +146,15 @@ class Server {
                     res.end();
                     return;
                 }
-
-
-                const baseDirectory = path.normalize([__dirname, ''].join(path.sep));
                 
                 const fileJson = {};
-                const files = getDirectoryListing(directory).forEach((file) => {
+                getDirectoryListing(directory).forEach((file) => {
                     fileJson[file.id] = {
                         isFile: file.isFile,
-                        name: file.name.replace(baseDirectory, '')
+                        name: file.name
                     }
                 });
 
-                // res.writeHeader(200, { "Content-Type": "text" });
                 res.json(fileJson);
                 res.end();
             } catch (error) {

@@ -1,3 +1,13 @@
+:root {
+  --green-light: #1fb123;
+  --page-margin-left: 5px;
+}
+
+body{
+  margin: 0;
+  padding: 0;
+}
+
 .hidden {
   display: none;
 }
@@ -32,4 +42,139 @@ div.desc {
   content: "";
   display: table;
   clear: both;
+}
+
+.menu-bar{
+  margin: 0px 0px 0px 0px;
+}
+
+.menu-bar button{
+  margin: 5px 5px 5px 5px;
+  color: white;
+  font-size: 14px;
+}
+
+#pageContainer {
+  margin-left: var(--page-margin-left);
+}
+
+#photoControls button{
+  margin: 5px 0px 5px 5px;
+  color: white;
+  font-size: 14px;
+}
+
+button {
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+}
+
+button:focus,
+button:active {
+    outline: 0;
+    border: none;
+}
+
+.green-button {
+  background-color: #1fb123;
+  border: 1px solid darkgreen;
+}
+
+.green-button:hover {
+  background-color: darkgreen;
+  border: 1px solid #1fb123;
+}
+
+.red-button {
+  background-color: #ca3535;
+  border: 1px solid #ee5f5b;
+}
+
+.red-button:hover {
+  background-color: #ca3535;
+  border: 1px solid #ee5f5b;
+}
+
+#container{
+  margin: 10px 3px 0px 3px;
+}
+
+.image-link{
+  padding: 3px 0px 3px 0px;
+}
+
+.image-link a {
+  text-decoration: none;
+}
+
+.image-link a:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.image-link a.green{
+  color: var(--green-light);
+}
+.image-link a.green:visited {
+  color: var(--green-light);
+}
+.image-link a.green:hover {
+  color: var(--green-light);
+}
+.image-link a.green:active {
+  color: var(--green-light);
+}
+
+.image-link [class*="icon-"]{
+  padding-right: 4px;
+}
+
+@font-face {
+  font-family: 'icomoon';
+  src: url('../fonts/icomoon.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-file-empty:before {
+  content: "\e924";
+}
+.icon-file-picture:before {
+  content: "\e927";
+}
+.icon-folder:before {
+  content: "\e92f";
+}
+.icon-folder-open:before {
+  content: "\e930";
+}
+.icon-folder-download:before {
+  content: "\e933";
+}
+.icon-folder-upload:before {
+  content: "\e934";
+}
+.icon-undo2:before {
+  content: "\e967";
+}
+.icon-reply:before {
+  content: "\e96a";
 }

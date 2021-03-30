@@ -9,19 +9,31 @@
 </head>
 
 <body>
-    <button id='photos'>Photos</button>
-    <button id='directory'>Directory</button>
-    <button id='albums'>Albums</button>
-
-    <div id="photoControls" class="hidden">
-        <h1 id="pageNumber"></h1>
-        <button id="back">Back</button>
-        <button id="next">Next</button>
+    <div class="menu-bar">
+        <button class="green-button" id='photos'>Photos</button>
+        <button class="green-button" id='directory'>Directory</button>
+        <button class="green-button" id='albums'>Albums</button>
+        <button class="green-button" id='albums'>Slideshow</button>
     </div>
 
-    <div id="container"></div>
+    <div id="pageContainer">
+
+        <div id="photoControls" class="hidden">
+            <h1 id="pageNumber"></h1>
+            <button class="green-button" id="back">Back</button>
+            <button class="green-button" id="next">Next</button>
+        </div>
+
+        <div id="container">
+
+        </div>
+
+    </div>
 
     <script type="module">
+        // slideshow - link to slideshow to show one photo, then change to new photo every 10 seconds
+        // albums search with images
+        // directory -  up level link
         import { Config } from '/config.js';
 
         let ipAddress = new Config().ipAddress;
@@ -45,16 +57,16 @@
                 start -= pageIncrement;
         }
 
-        function printPage () {
+        function printPage() {
             document.querySelector('#pageNumber').innerHTML = `Page: ${Math.floor(start / pageIncrement)}`;
         }
 
-        async function getImages(){
+        async function getImages() {
             let req = await fetch(`${baseUrl}/images?start=${start}&number=3`);
             let images = await req.json();
             let content = '';
 
-            Object.keys(images).forEach((img)=>{
+            Object.keys(images).forEach((img) => {
                 const image = images[img];
                 let imageDiv = `<div class="responsive">
                     <div class="gallery">
@@ -71,14 +83,14 @@
             document.querySelector('#container').innerHTML = content;
         }
 
-        photosButton.addEventListener('click', async() => {
+        photosButton.addEventListener('click', async () => {
             printPage();
             photoControls.classList.remove('hidden');
             await getImages();
 
         });
 
-        backButton.addEventListener('click', async() => {
+        backButton.addEventListener('click', async () => {
             changePage({
                 forward: false
             });
@@ -86,7 +98,7 @@
             await getImages();
         });
 
-        nextButton.addEventListener('click', async() => {
+        nextButton.addEventListener('click', async () => {
             changePage({
                 forward: true
             });
@@ -94,32 +106,74 @@
             await getImages();
         });
 
-        directoryButton.addEventListener('click', async() => {
-            photoControls.classList.add('hidden');
+        directoryButton.addEventListener('click', async () => {
+            getDirectories('images');
+        });
 
-            let request = await fetch(`${baseUrl}/listDirectory`);
+        document.querySelector('#container').addEventListener('click', async function (e) {
+            const element = e.target;
+            if (e.target.dataset.hasOwnProperty('id') && e.target.classList.contains(`folder`)) {
+                await getDirectories(element.dataset.id);
+            }
+        });
+
+        async function getDirectories(path) {
+            photoControls.classList.add('hidden');
+            const url = `${baseUrl}/listDirectory?dir=${path}`;
+            let request = await fetch(url);
+
             let directories = await request.json();
             document.querySelector('#container').innerHTML = '';
 
             let content = '';
 
-            Object.keys(directories).forEach((dir)=>{
-                const directory = directories[dir];
-                let href = '';
-                if (directory.isFile){
-                    href = `${baseUrl}/image?id=${dir}`;
-                }
-                else {
-                    href = `${baseUrl}/listDirectory?dir=${dir}`;
-                }
-                
-                let dirDiv = `<div><a href="${href}">${dir}</a></div>`;
+            // show current directory
+            const currentDirectory = `<div class="image-link"><h2>${path}</h2></div>`;
+            content += currentDirectory;
+
+            // add up level link
+            const upDirectory = path.split('/').slice(0, -1).join('/');
+            if (upDirectory !== '') {
+                const href = `${baseUrl}/listDirectory?dir=${upDirectory}`;
+                const dirDiv = `<div class="image-link"><span class="icon-undo2"></span><a class="folder green" data-id='${upDirectory}'>${upDirectory}</a></div>`;
                 content += dirDiv;
+            }
+
+            let directoryList = Object.keys(directories).map(dir => {
+                const directory = directories[dir];
+                return {
+                    id: dir,
+                    isFile: directory.isFile,
+                    name: directory.name
+                }
+
             });
+            console.log(directoryList);
+
+            // content of directory
+            directoryList.filter(dir => dir.isFile !== true).sort(sortAlphabetically).forEach((dir) => {
+                const fileName = dir.id.split('/').slice(-1);
+                const href = `${baseUrl}/listDirectory?dir=${dir.id}`;
+                const dirDiv = `<div class="image-link"><span class="icon-folder"></span><a class="folder green" data-id='${dir.id}'>${fileName}</a></div>`;
+                content += dirDiv;
+            })
+
+            directoryList.filter(dir => dir.isFile === true).sort(sortAlphabetically).forEach((dir) => {
+                const fileName = dir.id.split('/').slice(-1);
+                const href = `${baseUrl}/image?id=${dir.id}`;
+                const dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${fileName}</a></div>`;
+                content += dirDiv;
+            })
 
             document.querySelector('#container').innerHTML = content;
+        }
 
-        });
+        function sortAlphabetically(a, b) {
+            if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
+            if (a.name.toLowerCase() > b.name.toLowerCase()) return 1;
+            return 0;
+        }
+
     </script>
 </body>
 
