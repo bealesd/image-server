@@ -13,7 +13,7 @@
         <button class="green-button" id='photos'>Photos</button>
         <button class="green-button" id='directory'>Directory</button>
         <button class="green-button" id='albums'>Albums</button>
-        <button class="green-button" id='albums'>Slideshow</button>
+        <button class="green-button" id='slideshow'>Slideshow</button>
     </div>
 
     <div id="pageContainer">
@@ -43,11 +43,14 @@
 
         const pageIncrement = 3;
         let start = 0;
+        let slideshowImageIndex = 0;
 
         const backButton = document.querySelector('#back');
         const nextButton = document.querySelector('#next');
         const directoryButton = document.querySelector('#directory');
         const photosButton = document.querySelector('#photos');
+        const slideshowButton = document.querySelector('#slideshow');
+
         const photoControls = document.querySelector('#photoControls')
 
         function changePage(option) {
@@ -61,6 +64,23 @@
             document.querySelector('#pageNumber').innerHTML = `Page: ${Math.floor(start / pageIncrement)}`;
         }
 
+        async function getImage() {
+            let req = await fetch(`${baseUrl}/images?start=${slideshowImageIndex}&number=1`);
+            let images = await req.json();
+            let content = '';
+
+            Object.keys(images).forEach((img) => {
+                const image = images[img];
+                let imageDiv = `<div class="slideshow">
+                                 <img src="image?id=${img}" alt="${image.mageName}">
+                            </div>`;
+                content += imageDiv;
+            })
+
+
+            document.querySelector('#container').innerHTML = content;
+        }
+
         async function getImages() {
             let req = await fetch(`${baseUrl}/images?start=${start}&number=3`);
             let images = await req.json();
@@ -71,19 +91,32 @@
                 let imageDiv = `<div class="responsive">
                     <div class="gallery">
                         <a target="" href="image?id=${img}">
-                            <img src="image?id=${img}" alt="${image.mageName}" width="600" height="400">
+                            <img src="image?id=${img}" alt="${image.mageName}"  height="400">
                         </a>
                         <div class="desc">${image.day}/${image.month}/${image.year}</div>
                     </div>
                 </div>`;
                 content += imageDiv;
             })
-
+            // width="600"
 
             document.querySelector('#container').innerHTML = content;
         }
 
+        slideshowButton.addEventListener('click', async () => {
+            photoControls.classList.add('hidden');
+            await getImage();
+            slideshowImageIndex++;
+            window.interval = setInterval(async () => {
+                await getImage();
+                slideshowImageIndex++;
+            }, 10000)
+
+
+        });
+
         photosButton.addEventListener('click', async () => {
+            clearInterval(window.interval);
             printPage();
             photoControls.classList.remove('hidden');
             await getImages();
@@ -107,6 +140,7 @@
         });
 
         directoryButton.addEventListener('click', async () => {
+            clearInterval(window.interval);
             getDirectories('images');
         });
 

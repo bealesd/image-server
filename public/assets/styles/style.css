@@ -54,6 +54,17 @@ div.desc {
   font-size: 14px;
 }
 
+.slideshow {
+  display: grid;
+  height: 100%;
+}
+
+.slideshow img{
+  max-width: 100%;
+  max-height: 100vh;
+  margin: auto;
+}
+
 #pageContainer {
   margin-left: var(--page-margin-left);
 }
