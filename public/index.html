@@ -70,15 +70,14 @@
             let images = await req.json();
             let content = '';
 
-            if (Object.keys(images).length === 0) {
+            if (images.length === 0) {
                 slideshowImageIndex = 0;
                 content += `<h1>Slideshow has finished!</h1>`;
             }
 
-            Object.keys(images).forEach((img) => {
-                const image = images[img];
+            images.forEach((img) => {
                 let imageDiv = `<div class="slideshow">
-                                 <img src="image?id=${img}" alt="${image.mageName}">
+                                 <img src="image?id=${img.id}" alt="${img.name}" title="${img.name}">
                             </div>`;
                 content += imageDiv;
             })
@@ -87,7 +86,7 @@
         }
 
         async function getImages(startIndex, endIndex) {
-            //change to a n array being returned
+            // change to an array being returned
             let req = await fetch(`./images?startIndex=${startIndex}&endIndex=${endIndex}`);
             let images = await req.json();
             return images;
@@ -95,14 +94,13 @@
 
         function drawImages(images) {
             let content = '';
-            Object.keys(images).forEach((img) => {
-                const image = images[img];
+            images.forEach((img) => {
                 let imageDiv = `<div class="responsive">
                     <div class="gallery">
-                        <a target="" href="image?id=${img}">
-                            <img src="image?id=${img}" alt="${image.name}"  height="400">
+                        <a target="" href="image?id=${img.id}">
+                            <img src="image?id=${img.id}" alt="${img.name}" title="${img.day}/${img.month}/${img.year}" height="400">
                         </a>
-                        <div class="desc">${image.day}/${image.month}/${image.year}</div>
+                        <div class="desc">${img.name}</div>
                     </div>
                 </div>`;
                 content += imageDiv;
@@ -191,7 +189,7 @@
         }
 
         function updateNextPage(images) {
-            if (Object.keys(images).length === 0 || Object.values(images).slice(-1)[0].isLastImage) {
+            if (images.length === 0 || images.slice(-1)[0].isLastImage) {
                 nextButton.disabled = true;
             }
             else {
@@ -247,7 +245,6 @@
                     isFile: directory.isFile,
                     name: directory.name
                 }
-
             });
 
             // content of directory

@@ -40,7 +40,7 @@ class BuildPages {
 
     getImages(startIndex, endIndex) {
         const images = glob.sync([__dirname, 'images', '*.jpg'].join(path.sep));
-        const imagesJson = {};
+        const imageList = [];
 
         if (startIndex < 0 || startIndex > images.length - 1 || endIndex <= startIndex) {
             return {};
@@ -61,16 +61,17 @@ class BuildPages {
 
             const id = `${image.replace(`${__dirname}${path.sep}`, '')}`;
 
-            imagesJson[id] = {
+            imageList.push({
+                id: id,
                 name: imageName,
                 day: day,
                 month: month,
                 year: year,
                 isLastImage: i === (images.length - 1)
-            };
+            });
         }
 
-        return imagesJson;
+        return imageList;
     }
 }
 
@@ -106,8 +107,9 @@ class Server {
                 const startIndex = parseInt(params.startIndex);
                 const endIndex = parseInt(params.endIndex);
 
-                let imagesJson = this.buildPages.getImages(startIndex, endIndex);
-                res.json(imagesJson);
+                const images = this.buildPages.getImages(startIndex, endIndex);
+
+                res.json(images);
                 res.end();
             } catch (error) {
                 res.status(400).send(error.message);
@@ -129,7 +131,7 @@ class Server {
                     res.end();
                     return;
                 }
-                
+
                 const fileJson = {};
                 getDirectoryListing(directory).forEach((file) => {
                     fileJson[file.id] = {
