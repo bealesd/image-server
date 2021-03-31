@@ -1,6 +1,9 @@
 # local image folder at root
 images/**
 
+# config
+**/config.js
+
 # Logs
 logs
 *.log

@@ -2,7 +2,7 @@ const express = require('express')
 const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
-const HTMLParser = require('node-html-parser');
+// const HTMLParser = require('node-html-parser');
 const glob = require('glob');
 const ip = require("ip");
 
@@ -29,14 +29,14 @@ function getDirectoryListing(dir) {
 }
 
 class BuildPages {
-    generateConfig() {
-        const config =
-            `export class Config {
-            ipAddress = '${ipAddress}';
-            port =  '${port}';
-        }`
-        fs.writeFileSync([__dirname, 'public', 'config.js'].join(path.sep), config, { flag: 'w' });
-    }
+    // generateConfig() {
+    //     const config =
+    //         `export class Config {
+    //         ipAddress = '${ipAddress}';
+    //         port =  '${port}';
+    //     }`
+    //     fs.writeFileSync([ 'public', 'assets', 'js', 'config.js'].join(path.sep), config, { flag: 'w' });
+    // }
 
     getImages(startIndex, number) {
         const images = glob.sync([__dirname, 'images', '*.jpg'].join(path.sep));
@@ -76,7 +76,7 @@ class BuildPages {
 class Server {
     constructor() {
         this.buildPages = new BuildPages();
-        this.buildPages.generateConfig();
+        // this.buildPages.generateConfig();
     }
 
     main() {
@@ -84,22 +84,6 @@ class Server {
 
         app.use(cors());
         app.use(express.static(path.join(__dirname, './public')));
-
-        app.get('/', (req, res) => {
-            try {
-                res.sendFile(path.join(__dirname, './index.html'));
-            } catch (error) {
-                res.status(400).send(error.message);
-            }
-        });
-
-        app.get('/index.html', async (req, res) => {
-            try {
-                res.sendFile(path.join(__dirname, './index.html'));
-            } catch (error) {
-                res.status(400).send(error.message);
-            }
-        })
 
         app.get('/image', async (req, res) => {
             try {
@@ -170,7 +154,7 @@ class Server {
                 res.end();
             }
 
-            const html = fs.readFileSync('error.html');
+            const html = fs.readFileSync('public/error.html');
 
             res.writeHeader(200, { "Content-Type": "text/html" });
             res.write(html);

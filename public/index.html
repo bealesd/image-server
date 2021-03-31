@@ -25,21 +25,17 @@
         </div>
 
         <div id="container">
-
         </div>
 
     </div>
 
     <script type="module">
-        // slideshow - link to slideshow to show one photo, then change to new photo every 10 seconds
-        // albums search with images
-        // directory -  up level link
-        import { Config } from '/config.js';
+        // import { Config } from './assets/js/config.js';
 
-        let ipAddress = new Config().ipAddress;
-        ipAddress = 'localhost';
-        const port = new Config().port;
-        const baseUrl = `http://${ipAddress}:${port}`;
+        // let ipAddress = new Config().ipAddress;
+        // ipAddress = 'localhost';
+        // const port = new Config().port;
+        // const baseUrl = `http://${ipAddress}:${port}`;
 
         const pageIncrement = 3;
         let start = 0;
@@ -65,7 +61,7 @@
         }
 
         async function getImage() {
-            let req = await fetch(`${baseUrl}/images?start=${slideshowImageIndex}&number=1`);
+            let req = await fetch(`./images?start=${slideshowImageIndex}&number=1`);
             let images = await req.json();
             let content = '';
 
@@ -82,7 +78,7 @@
         }
 
         async function getImages() {
-            let req = await fetch(`${baseUrl}/images?start=${start}&number=3`);
+            let req = await fetch(`./images?start=${start}&number=3`);
             let images = await req.json();
             let content = '';
 
@@ -153,7 +149,7 @@
 
         async function getDirectories(path) {
             photoControls.classList.add('hidden');
-            const url = `${baseUrl}/listDirectory?dir=${path}`;
+            const url = `./listDirectory?dir=${path}`;
             let request = await fetch(url);
 
             let directories = await request.json();
@@ -168,7 +164,7 @@
             // add up level link
             const upDirectory = path.split('/').slice(0, -1).join('/');
             if (upDirectory !== '') {
-                const href = `${baseUrl}/listDirectory?dir=${upDirectory}`;
+                const href = `./listDirectory?dir=${upDirectory}`;
                 const dirDiv = `<div class="image-link"><span class="icon-undo2"></span><a class="folder green" data-id='${upDirectory}'>${upDirectory}</a></div>`;
                 content += dirDiv;
             }
@@ -182,19 +178,18 @@
                 }
 
             });
-            console.log(directoryList);
 
             // content of directory
             directoryList.filter(dir => dir.isFile !== true).sort(sortAlphabetically).forEach((dir) => {
                 const fileName = dir.id.split('/').slice(-1);
-                const href = `${baseUrl}/listDirectory?dir=${dir.id}`;
+                const href = `./listDirectory?dir=${dir.id}`;
                 const dirDiv = `<div class="image-link"><span class="icon-folder"></span><a class="folder green" data-id='${dir.id}'>${fileName}</a></div>`;
                 content += dirDiv;
             })
 
             directoryList.filter(dir => dir.isFile === true).sort(sortAlphabetically).forEach((dir) => {
                 const fileName = dir.id.split('/').slice(-1);
-                const href = `${baseUrl}/image?id=${dir.id}`;
+                const href = `./image?id=${dir.id}`;
                 const dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${fileName}</a></div>`;
                 content += dirDiv;
             })

@@ -1,6 +1,12 @@
 :root {
   --green-light: #1fb123;
   --page-margin-left: 5px;
+
+  --menu-bar-button-height: 20px;
+  --menu-bar-margin-vertical: 5px;
+  --menu-bar-height: calc(var(--menu-bar-button-height) + var(--menu-bar-margin-vertical) * 2);
+
+  --container-margin-top: 10px;
 }
 
 body{
@@ -45,13 +51,14 @@ div.desc {
 }
 
 .menu-bar{
-  margin: 0px 0px 0px 0px;
+  margin: 0px;
 }
 
 .menu-bar button{
-  margin: 5px 5px 5px 5px;
+  margin: var(--menu-bar-margin-vertical) 5px;
   color: white;
   font-size: 14px;
+  height: var(--menu-bar-button-height);
 }
 
 .slideshow {
@@ -60,8 +67,9 @@ div.desc {
 }
 
 .slideshow img{
+  
   max-width: 100%;
-  max-height: 100vh;
+  max-height: calc(100vh - (10px + var(--menu-bar-height) + var(--container-margin-top)));
   margin: auto;
 }
 
@@ -109,7 +117,7 @@ button:active {
 }
 
 #container{
-  margin: 10px 3px 0px 3px;
+  margin: var(--container-margin-top) 3px 0px 3px;
 }
 
 .image-link{
