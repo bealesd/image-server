@@ -38,15 +38,15 @@ class BuildPages {
     //     fs.writeFileSync([ 'public', 'assets', 'js', 'config.js'].join(path.sep), config, { flag: 'w' });
     // }
 
-    getImages(startIndex, number) {
+    getImages(startIndex, endIndex) {
         const images = glob.sync([__dirname, 'images', '*.jpg'].join(path.sep));
         const imagesJson = {};
 
-        if (startIndex < 0 || startIndex > images.length - 1) {
+        if (startIndex < 0 || startIndex > images.length - 1 || endIndex <= startIndex) {
             return {};
         }
 
-        let endIndex = (startIndex + number) < images.length ? startIndex + number : images.length;
+        endIndex = endIndex < images.length ? endIndex : images.length;
 
         for (let i = startIndex; i < endIndex; i++) {
             const image = path.normalize(images[i]);
@@ -65,7 +65,8 @@ class BuildPages {
                 name: imageName,
                 day: day,
                 month: month,
-                year: year
+                year: year,
+                isLastImage: i === (images.length - 1)
             };
         }
 
@@ -101,13 +102,11 @@ class Server {
 
         app.get('/images', async (req, res) => {
             try {
-                //list images
                 const params = req.query;
-                const startIndex = parseInt(params.start);
-                const number = parseInt(params.number);
+                const startIndex = parseInt(params.startIndex);
+                const endIndex = parseInt(params.endIndex);
 
-                let imagesJson = this.buildPages.getImages(startIndex, number);
-
+                let imagesJson = this.buildPages.getImages(startIndex, endIndex);
                 res.json(imagesJson);
                 res.end();
             } catch (error) {

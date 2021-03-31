@@ -37,33 +37,43 @@
         // const port = new Config().port;
         // const baseUrl = `http://${ipAddress}:${port}`;
 
-        const pageIncrement = 3;
-        let start = 0;
+        const photosPerPage = 3;
+        let photosStartIndex = 1;
+        let photosCurrentPage = 1;
         let slideshowImageIndex = 0;
 
         const backButton = document.querySelector('#back');
         const nextButton = document.querySelector('#next');
         const directoryButton = document.querySelector('#directory');
         const photosButton = document.querySelector('#photos');
+        const albumsButton = document.querySelector('#albums');
         const slideshowButton = document.querySelector('#slideshow');
 
         const photoControls = document.querySelector('#photoControls')
+        let isLastPage = false;
 
-        function changePage(option) {
-            if (option.forward)
-                start += pageIncrement;
-            else
-                start -= pageIncrement;
+        function updatePageNumber(option) {
+            if (option.direction === 'next') {
+                photosCurrentPage++;
+            }
+            else if (option.direction === 'back') {
+                photosCurrentPage--;
+            }
         }
 
-        function printPage() {
-            document.querySelector('#pageNumber').innerHTML = `Page: ${Math.floor(start / pageIncrement)}`;
+        function printPageNumber() {
+            document.querySelector('#pageNumber').innerHTML = `Page: ${photosCurrentPage}`;
         }
 
         async function getImage() {
-            let req = await fetch(`./images?start=${slideshowImageIndex}&number=1`);
+            let req = await fetch(`./images?startIndex=${slideshowImageIndex}&endIndex=${slideshowImageIndex + 1}`);
             let images = await req.json();
             let content = '';
+
+            if (Object.keys(images).length === 0) {
+                slideshowImageIndex = 0;
+                content += `<h1>Slideshow has finished!</h1>`;
+            }
 
             Object.keys(images).forEach((img) => {
                 const image = images[img];
@@ -73,21 +83,24 @@
                 content += imageDiv;
             })
 
-
             document.querySelector('#container').innerHTML = content;
         }
 
-        async function getImages() {
-            let req = await fetch(`./images?start=${start}&number=3`);
+        async function getImages(startIndex, endIndex) {
+            //change to a n array being returned
+            let req = await fetch(`./images?startIndex=${startIndex}&endIndex=${endIndex}`);
             let images = await req.json();
-            let content = '';
+            return images;
+        }
 
+        function drawImages(images) {
+            let content = '';
             Object.keys(images).forEach((img) => {
                 const image = images[img];
                 let imageDiv = `<div class="responsive">
                     <div class="gallery">
                         <a target="" href="image?id=${img}">
-                            <img src="image?id=${img}" alt="${image.mageName}"  height="400">
+                            <img src="image?id=${img}" alt="${image.name}"  height="400">
                         </a>
                         <div class="desc">${image.day}/${image.month}/${image.year}</div>
                     </div>
@@ -99,56 +112,114 @@
             document.querySelector('#container').innerHTML = content;
         }
 
+        albumsButton.addEventListener('click', async () => {
+            photoControls.classList.add('hidden');
+            clearInterval(window.interval);
+            await getDirectories('images', true)
+
+        });
+
         slideshowButton.addEventListener('click', async () => {
             photoControls.classList.add('hidden');
+            clearInterval(window.interval);
             await getImage();
             slideshowImageIndex++;
             window.interval = setInterval(async () => {
                 await getImage();
                 slideshowImageIndex++;
             }, 10000)
-
-
         });
 
         photosButton.addEventListener('click', async () => {
             clearInterval(window.interval);
-            printPage();
             photoControls.classList.remove('hidden');
-            await getImages();
 
+            printPageNumber();
+
+            let result = await getImages(getPhotosStartIndex(), getPhotosEndIndex());
+            drawImages(result);
+
+            updatePhotoControls(result);
         });
 
+
         backButton.addEventListener('click', async () => {
-            changePage({
-                forward: false
-            });
-            printPage();
-            await getImages();
+            updatePageNumber({ direction: 'back' });
+            printPageNumber()
+
+            let result = await getImages(getPhotosStartIndex(), getPhotosEndIndex());
+            drawImages(result);
+
+            updatePhotoControls(result);
         });
 
         nextButton.addEventListener('click', async () => {
-            changePage({
-                forward: true
-            });
-            printPage();
-            await getImages();
+            updatePageNumber({ direction: 'next' });
+            printPageNumber()
+
+            let result = await getImages(getPhotosStartIndex(), getPhotosEndIndex());
+            drawImages(result);
+
+            updatePhotoControls(result);
         });
+
+        function getPhotosStartIndex() {
+            if (photosCurrentPage === 1) {
+                return 0;
+            }
+            else {
+                return (photosCurrentPage - 1) * photosPerPage;
+            }
+        }
+
+        function getPhotosEndIndex() {
+            return getPhotosStartIndex() + photosPerPage;
+        }
+
+        function updatePhotoControls(images) {
+            updateBackPage();
+            updateNextPage(images);
+        }
+
+        function updateBackPage() {
+            if (photosCurrentPage === 1) {
+                backButton.disabled = true;
+            }
+            else if (photosCurrentPage > 1) {
+                backButton.disabled = false;
+            }
+        }
+
+        function updateNextPage(images) {
+            if (Object.keys(images).length === 0 || Object.values(images).slice(-1)[0].isLastImage) {
+                nextButton.disabled = true;
+            }
+            else {
+                nextButton.disabled = false;
+            }
+        }
 
         directoryButton.addEventListener('click', async () => {
             clearInterval(window.interval);
             getDirectories('images');
         });
 
+        window.i = 0;
         document.querySelector('#container').addEventListener('click', async function (e) {
+            console.log(window.i++);
             const element = e.target;
             if (e.target.dataset.hasOwnProperty('id') && e.target.classList.contains(`folder`)) {
-                await getDirectories(element.dataset.id);
+                const showImages = e.target.classList.contains('showImages');
+                if (showImages) {
+                    await getDirectories(element.dataset.id, true);
+                }
+                else {
+                    await getDirectories(element.dataset.id);
+                }
             }
         });
 
-        async function getDirectories(path) {
-            photoControls.classList.add('hidden');
+        async function getDirectories(path, images = false) {
             const url = `./listDirectory?dir=${path}`;
             let request = await fetch(url);
 
@@ -165,7 +236,7 @@
             const upDirectory = path.split('/').slice(0, -1).join('/');
             if (upDirectory !== '') {
                 const href = `./listDirectory?dir=${upDirectory}`;
-                const dirDiv = `<div class="image-link"><span class="icon-undo2"></span><a class="folder green" data-id='${upDirectory}'>${upDirectory}</a></div>`;
+                const dirDiv = `<div class="image-link"><span class="icon-undo2"></span><a class="folder green ${images ? 'showImages' : ''}" data-id='${upDirectory}'>${upDirectory}</a></div>`;
                 content += dirDiv;
             }
 
@@ -183,14 +254,27 @@
             directoryList.filter(dir => dir.isFile !== true).sort(sortAlphabetically).forEach((dir) => {
                 const fileName = dir.id.split('/').slice(-1);
                 const href = `./listDirectory?dir=${dir.id}`;
-                const dirDiv = `<div class="image-link"><span class="icon-folder"></span><a class="folder green" data-id='${dir.id}'>${fileName}</a></div>`;
+                const dirDiv = `<div class="image-link"><span class="icon-folder"></span><a class="folder green ${images ? 'showImages' : ''}" data-id='${dir.id}'>${fileName}</a></div>`;
                 content += dirDiv;
             })
 
             directoryList.filter(dir => dir.isFile === true).sort(sortAlphabetically).forEach((dir) => {
                 const fileName = dir.id.split('/').slice(-1);
                 const href = `./image?id=${dir.id}`;
-                const dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${fileName}</a></div>`;
+                let dirDiv = '';
+                if (images) {
+                    dirDiv = `<div class="responsive">
+                    <div class="gallery">
+                        <a target="" href="${href}">
+                            <img src="${href}" alt="${''}"  height="400">
+                        </a>
+                        <div class="desc">${fileName}</div>
+                    </div>
+                </div>`
+                }
+                else {
+                    dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${fileName}</a></div>`;
+                }
                 content += dirDiv;
             })
 
