@@ -2,7 +2,6 @@ const express = require('express')
 const fs = require('fs');
 const cors = require('cors');
 const path = require('path');
-// const HTMLParser = require('node-html-parser');
 const glob = require('glob');
 const ip = require("ip");
 
@@ -42,9 +41,8 @@ class BuildPages {
         const images = glob.sync([__dirname, 'images', '*.jpg'].join(path.sep));
         const imageList = [];
 
-        if (startIndex < 0 || startIndex > images.length - 1 || endIndex <= startIndex) {
-            return {};
-        }
+        if (startIndex < 0 || startIndex > images.length - 1 || endIndex <= startIndex)
+            return imageList;
 
         endIndex = endIndex < images.length ? endIndex : images.length;
 
@@ -78,7 +76,6 @@ class BuildPages {
 class Server {
     constructor() {
         this.buildPages = new BuildPages();
-        // this.buildPages.generateConfig();
     }
 
     main() {
@@ -89,7 +86,6 @@ class Server {
 
         app.get('/image', async (req, res) => {
             try {
-                // get image
                 const params = req.query;
                 const imageId = params.id;
 
@@ -118,8 +114,6 @@ class Server {
 
         app.get('/listDirectory', async (req, res) => {
             try {
-                // list image directory
-                // return directory and if file or folder
                 const params = req.query;
                 const rawDir = params.dir ?? 'images';
                 const directory = [__dirname, rawDir.split(',')].flat().join(path.sep);
@@ -132,15 +126,9 @@ class Server {
                     return;
                 }
 
-                const fileJson = {};
-                getDirectoryListing(directory).forEach((file) => {
-                    fileJson[file.id] = {
-                        isFile: file.isFile,
-                        name: file.name
-                    }
-                });
+                const files = getDirectoryListing(directory);
 
-                res.json(fileJson);
+                res.json(files);
                 res.end();
             } catch (error) {
                 res.status(400).send(error.message);

@@ -38,9 +38,9 @@
         // const baseUrl = `http://${ipAddress}:${port}`;
 
         const photosPerPage = 3;
-        let photosStartIndex = 1;
         let photosCurrentPage = 1;
         let slideshowImageIndex = 0;
+        const slideShowInterval = 10000;
 
         const backButton = document.querySelector('#back');
         const nextButton = document.querySelector('#next');
@@ -86,7 +86,6 @@
         }
 
         async function getImages(startIndex, endIndex) {
-            // change to an array being returned
             let req = await fetch(`./images?startIndex=${startIndex}&endIndex=${endIndex}`);
             let images = await req.json();
             return images;
@@ -111,27 +110,20 @@
         }
 
         albumsButton.addEventListener('click', async () => {
-            photoControls.classList.add('hidden');
-            clearInterval(window.interval);
             await getDirectories('images', true)
 
         });
 
         slideshowButton.addEventListener('click', async () => {
-            photoControls.classList.add('hidden');
-            clearInterval(window.interval);
             await getImage();
             slideshowImageIndex++;
             window.interval = setInterval(async () => {
                 await getImage();
                 slideshowImageIndex++;
-            }, 10000)
+            }, slideShowInterval)
         });
 
         photosButton.addEventListener('click', async () => {
-            clearInterval(window.interval);
-            photoControls.classList.remove('hidden');
-
             printPageNumber();
 
             let result = await getImages(getPhotosStartIndex(), getPhotosEndIndex());
@@ -198,16 +190,13 @@
         }
 
         directoryButton.addEventListener('click', async () => {
-            clearInterval(window.interval);
             getDirectories('images');
         });
 
-        window.i = 0;
         document.querySelector('#container').addEventListener('click', async function (e) {
-            console.log(window.i++);
             const element = e.target;
-            if (e.target.dataset.hasOwnProperty('id') && e.target.classList.contains(`folder`)) {
-                const showImages = e.target.classList.contains('showImages');
+            if (element.dataset.hasOwnProperty('id') && element.classList.contains(`folder`)) {
+                const showImages = element.classList.contains('showImages');
                 if (showImages) {
                     await getDirectories(element.dataset.id, true);
                 }
@@ -215,6 +204,20 @@
                     await getDirectories(element.dataset.id);
                 }
             }
+        });
+
+        document.querySelector('.menu-bar').addEventListener('click', async function (e) {
+            // destructor - call each components destructor in future
+            photoControls.classList.add('hidden');
+
+            clearInterval(window.interval);
+
+            const element = e.target;
+            if (element === photosButton) {
+                photoControls.classList.remove('hidden');
+            }
+
+
         });
 
         async function getDirectories(path, images = false) {
@@ -238,25 +241,13 @@
                 content += dirDiv;
             }
 
-            let directoryList = Object.keys(directories).map(dir => {
-                const directory = directories[dir];
-                return {
-                    id: dir,
-                    isFile: directory.isFile,
-                    name: directory.name
-                }
-            });
-
-            // content of directory
-            directoryList.filter(dir => dir.isFile !== true).sort(sortAlphabetically).forEach((dir) => {
-                const fileName = dir.id.split('/').slice(-1);
+            directories.filter(dir => dir.isFile !== true).sort(sortAlphabetically).forEach((dir) => {
                 const href = `./listDirectory?dir=${dir.id}`;
-                const dirDiv = `<div class="image-link"><span class="icon-folder"></span><a class="folder green ${images ? 'showImages' : ''}" data-id='${dir.id}'>${fileName}</a></div>`;
+                const dirDiv = `<div class="image-link"><span class="icon-folder"></span><a class="folder green ${images ? 'showImages' : ''}" data-id='${dir.id}'>${dir.name}</a></div>`;
                 content += dirDiv;
             })
 
-            directoryList.filter(dir => dir.isFile === true).sort(sortAlphabetically).forEach((dir) => {
-                const fileName = dir.id.split('/').slice(-1);
+            directories.filter(dir => dir.isFile === true).sort(sortAlphabetically).forEach((dir) => {
                 const href = `./image?id=${dir.id}`;
                 let dirDiv = '';
                 if (images) {
@@ -265,12 +256,12 @@
                         <a target="" href="${href}">
                             <img src="${href}" alt="${''}"  height="400">
                         </a>
-                        <div class="desc">${fileName}</div>
+                        <div class="desc">${dir.name}</div>
                     </div>
                 </div>`
                 }
                 else {
-                    dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${fileName}</a></div>`;
+                    dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${dir.name}</a></div>`;
                 }
                 content += dirDiv;
             })
