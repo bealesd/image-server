@@ -7,6 +7,7 @@ const ip = require("ip");
 
 const ipAddress = ip.address();
 const port = process.env.PORT || 8081;
+const htmlSeparator = '/'
 
 function getDirectories(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).filter(v => v.isDirectory()).map(v => [dir, v.name].join(path.sep));
@@ -19,10 +20,11 @@ function getDirectoriesRecursive(dir) {
 function getDirectoryListing(dir) {
     return fs.readdirSync(dir, { withFileTypes: true })
         .map((v) => {
+            let id  = path.normalize([dir, v.name].join(path.sep).replace(__dirname, '')).slice(1)
             return {
                 isFile: v.isFile(),
                 name: v.name,
-                id: path.normalize([dir, v.name].join(path.sep).replace(__dirname, '')).slice(1)
+                id: id.replace(path.sep, htmlSeparator)
             };
         });
 }
@@ -57,7 +59,8 @@ class BuildPages {
             const month = stats.mtime.getMonth() + 1;
             const year = stats.mtime.getFullYear();
 
-            const id = `${image.replace(`${__dirname}${path.sep}`, '')}`;
+            let id = `${image.replace(`${__dirname}${path.sep}`, '')}`;
+            id = id.replace(path.sep, htmlSeparator);
 
             imageList.push({
                 id: id,
@@ -87,7 +90,8 @@ class Server {
         app.get('/image', async (req, res) => {
             try {
                 const params = req.query;
-                const imageId = params.id;
+                let imageId = params.id;
+                imageId = imageId.replace('/', path.sep);
 
                 const img = fs.readFileSync(imageId);
                 res.writeHead(200, { 'Content-Type': 'image/jpeg' });
@@ -116,7 +120,7 @@ class Server {
             try {
                 const params = req.query;
                 const rawDir = params.dir ?? 'images';
-                const directory = [__dirname, rawDir.split(',')].flat().join(path.sep);
+                const directory = [__dirname, rawDir.split('/')].flat().join(path.sep);
 
                 const validDirectories = getDirectoriesRecursive([__dirname, 'images'].join(path.sep), []);
 

@@ -21,30 +21,35 @@ body{
   display: none;
 }
 
-div.gallery {
+.responsive {
+  margin: 5px;
+  float: left;
   border: 1px solid #ccc;
-  width: 200px;
 }
 
-div.gallery:hover {
+.responsive:hover,
+.responsive:hover .gallery {
   border: 1px solid #777;
+  cursor: pointer;
+}
+
+div.gallery {
+  display: table-cell;
+  height: 300px;
+  width: 300px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #ccc;
 }
 
 div.gallery img {
-  float: left;
-  width:  200px;
-  height: 200px;
-  object-fit: cover;
+  max-width:100%; 
+  max-height:100%;
 }
 
 div.desc {
+  display: block;
   text-align: center;
-}
-
-.responsive {
-  padding: 6px;
-  float: left;
-  width: 200px;
 }
 
 .clearfix:after {

@@ -5,7 +5,7 @@
   "author": "david beales",
   "license": "MIT",
   "scripts": {
-    "build": "node server.js"
+    "build": "yarn && node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

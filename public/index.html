@@ -37,7 +37,7 @@
         // const port = new Config().port;
         // const baseUrl = `http://${ipAddress}:${port}`;
 
-        const photosPerPage = 3;
+        const photosPerPage = 10;
         let photosCurrentPage = 1;
         let slideshowImageIndex = 0;
         const slideShowInterval = 10000;
@@ -94,18 +94,16 @@
         function drawImages(images) {
             let content = '';
             images.forEach((img) => {
-                let imageDiv = `<div class="responsive">
+                let imageDiv = `
+                <div class="responsive" onclick="window.open('image?id=${img.id}')">
                     <div class="gallery">
-                        <a target="" href="image?id=${img.id}">
-                            <img src="image?id=${img.id}" alt="${img.name}" title="${img.day}/${img.month}/${img.year}" height="400">
-                        </a>
-                        <div class="desc">${img.name}</div>
+                        <img align="middle" src="image?id=${img.id}" alt="${img.name}" title="${img.day}/${img.month}/${img.year}">
                     </div>
-                </div>`;
+                    <div class="desc">${img.name}</div>
+                </div>
+                `;
                 content += imageDiv;
             })
-            // width="600"
-
             document.querySelector('#container').innerHTML = content;
         }
 
@@ -251,14 +249,14 @@
                 const href = `./image?id=${dir.id}`;
                 let dirDiv = '';
                 if (images) {
-                    dirDiv = `<div class="responsive">
-                    <div class="gallery">
-                        <a target="" href="${href}">
-                            <img src="${href}" alt="${''}"  height="400">
-                        </a>
-                        <div class="desc">${dir.name}</div>
-                    </div>
-                </div>`
+                    dirDiv = `
+                        <div class="responsive" onclick="window.open('image?id=${dir.id}')">
+                            <div class="gallery">
+                                <img align="middle" src="image?id=${dir.id}" alt="${dir.name}" title="${dir.day}/${dir.month}/${dir.year}">
+                            </div>
+                            <div class="desc">${dir.name}</div>
+                        </div>
+                `
                 }
                 else {
                     dirDiv = `<div class="image-link"><span class="icon-file-picture"></span><a class="green" target="_blank" href="${href}">${dir.name}</a></div>`;
