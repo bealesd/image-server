@@ -42,6 +42,8 @@
         let slideshowImageIndex = 0;
         const slideShowInterval = 10000;
 
+        const containerElement = document.querySelector('#container');
+
         const backButton = document.querySelector('#back');
         const nextButton = document.querySelector('#next');
         const directoryButton = document.querySelector('#directory');
@@ -49,8 +51,7 @@
         const albumsButton = document.querySelector('#albums');
         const slideshowButton = document.querySelector('#slideshow');
 
-        const photoControls = document.querySelector('#photoControls')
-        let isLastPage = false;
+        const photoControls = document.querySelector('#photoControls');
 
         function updatePageNumber(option) {
             if (option.direction === 'next') {
