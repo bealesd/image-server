@@ -6,7 +6,7 @@ const glob = require('glob');
 const ip = require("ip");
 
 const ipAddress = ip.address();
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8080;
 
 const htmlSeparator = '/';
 const imagesWhitelist = ['apng', 'avif', 'gif', 'jfif', 'jpeg', 'jpg', 'pjp', 'pjpeg', 'png', 'svg', 'webp'];
