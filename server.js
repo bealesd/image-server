@@ -7,10 +7,14 @@ const ip = require("ip");
 
 const ipAddress = ip.address();
 const port = process.env.PORT || 8081;
-const htmlSeparator = '/'
+
+const htmlSeparator = '/';
+const imagesWhitelist = ['apng', 'avif', 'gif', 'jfif', 'jpeg', 'jpg', 'pjp', 'pjpeg', 'png', 'svg', 'webp'];
 
 function getDirectories(dir) {
-    return fs.readdirSync(dir, { withFileTypes: true }).filter(v => v.isDirectory()).map(v => [dir, v.name].join(path.sep));
+    return fs.readdirSync(dir, { withFileTypes: true })
+        .filter(v => v.isDirectory())
+        .map(v => [dir, v.name].join(path.sep));
 }
 
 function getDirectoriesRecursive(dir) {
@@ -20,27 +24,18 @@ function getDirectoriesRecursive(dir) {
 function getDirectoryListing(dir) {
     return fs.readdirSync(dir, { withFileTypes: true })
         .map((v) => {
-            let id  = path.normalize([dir, v.name].join(path.sep).replace(__dirname, '')).slice(1)
+            let id = path.normalize([dir, v.name].join(path.sep).replace(__dirname, '')).slice(1)
             return {
                 isFile: v.isFile(),
                 name: v.name,
-                id: id.replace(path.sep, htmlSeparator)
+                id: id.split(path.sep).join(htmlSeparator)
             };
         });
 }
 
-class BuildPages {
-    // generateConfig() {
-    //     const config =
-    //         `export class Config {
-    //         ipAddress = '${ipAddress}';
-    //         port =  '${port}';
-    //     }`
-    //     fs.writeFileSync([ 'public', 'assets', 'js', 'config.js'].join(path.sep), config, { flag: 'w' });
-    // }
-
-    getImages(startIndex, endIndex) {
-        const images = glob.sync([__dirname, 'images', '*.jpg'].join(path.sep));
+class ImageService {
+    getImages(startIndex, endIndex) {      
+        const images = glob.sync([__dirname, `images${path.sep}**`, `*.{${imagesWhitelist.join(',')}}`].join(path.sep));
         const imageList = [];
 
         if (startIndex < 0 || startIndex > images.length - 1 || endIndex <= startIndex)
@@ -60,7 +55,7 @@ class BuildPages {
             const year = stats.mtime.getFullYear();
 
             let id = `${image.replace(`${__dirname}${path.sep}`, '')}`;
-            id = id.replace(path.sep, htmlSeparator);
+            id = id.split(path.sep).join(htmlSeparator);
 
             imageList.push({
                 id: id,
@@ -78,7 +73,7 @@ class BuildPages {
 
 class Server {
     constructor() {
-        this.buildPages = new BuildPages();
+        this.buildPages = new ImageService();
     }
 
     main() {
@@ -118,9 +113,10 @@ class Server {
 
         app.get('/listDirectory', async (req, res) => {
             try {
+                // we want html '/' for path joining in result
                 const params = req.query;
                 const rawDir = params.dir ?? 'images';
-                const directory = [__dirname, rawDir.split('/')].flat().join(path.sep);
+                const directory = [__dirname, rawDir.split(htmlSeparator)].flat().join(path.sep);
 
                 const validDirectories = getDirectoriesRecursive([__dirname, 'images'].join(path.sep), []);
 

@@ -1,81 +1,94 @@
-
-
 export class Photos {
     photosPerPage = 10;
     photosCurrentPage = 1;
 
-    photoControlsHtml = `
-        <div id="photoControls" class="hidden">
-            <h1 id="pageNumber"></h1>
+    photoControlsContainerHtml = `
+        <div class="photo-controls-container">
+            <h1 class="page-number"></h1>
             <button class="green-button" id="back">Back</button>
             <button class="green-button" id="next">Next</button>
         </div>
+        <div class="photos-container"></div>
     `;
 
     constructor(containerElement) {
-        this.containerElement = containerElement;
+        this.container = containerElement;
     }
 
-    open() {
-        this.container.innerHTML = photoControlsHtml;
-        photoControls = document.querySelector('#photoControls');
+    load() {
+        this.container.innerHTML = this.photoControlsContainerHtml;
+
+        this.photoControlsContainer = document.querySelector('.photo-controls-container');
+        this.photosContainer = document.querySelector('.photos-container');
 
         this.backButton = document.querySelector('#back');
         this.nextButton = document.querySelector('#next');
+
+        this.pageNumber = document.querySelector('.page-number');
+
+        this.loadPage();
+        this.registerEventListeners();
     }
 
-    callback() {
-        printPageNumber();
+    unload(){
+        this.container.innerHTML = '';
+    }
 
-        let result = await getImages(getPhotosStartIndex(), getPhotosEndIndex());
-        drawImages(result);
+    registerEventListeners() {
+        this.backButton.addEventListener('click', async () => {
+            this.updatePageNumber({ direction: 'back' });
+            await this.loadPage();
+        });
 
-        updatePhotoControls(result);
+        this.nextButton.addEventListener('click', async () => {
+            this.updatePageNumber({ direction: 'next' });
+            await this.loadPage();
+        });
+    }
 
+    async loadPage() {
+        this.printPageNumber();
 
+        let result = await this.getImages(this.getPhotosStartIndex(), this.getPhotosEndIndex());
+        this.drawImages(result);
+
+        this.updatePhotoControlsContainer(result);
     }
 
     printPageNumber() {
-        document.querySelector('#pageNumber').innerHTML = `Page: ${photosCurrentPage}`;
+        this.pageNumber.innerHTML = `Page ${this.photosCurrentPage}`;
     }
 
     updatePageNumber(option) {
-        if (option.direction === 'next') {
-            photosCurrentPage++;
-        }
-        else if (option.direction === 'back') {
-            photosCurrentPage--;
-        }
+        if (option.direction === 'next')
+            this.photosCurrentPage++;
+        else if (option.direction === 'back')
+            this.photosCurrentPage--;
     }
 
-    getImages(startIndex, endIndex) {
+    async getImages(startIndex, endIndex) {
         let req = await fetch(`./images?startIndex=${startIndex}&endIndex=${endIndex}`);
         let images = await req.json();
         return images;
     }
 
-    updatePhotoControls(images) {
-        updateBackPage();
-        updateNextPage(images);
+    updatePhotoControlsContainer(images) {
+        this.updateBackPage();
+        this.updateNextPage(images);
     }
 
     updateBackPage() {
-        if (photosCurrentPage === 1) {
-            backButton.disabled = true;
-        }
-        else if (photosCurrentPage > 1) {
-            backButton.disabled = false;
-        }
+        if (this.photosCurrentPage === 1)
+            this.backButton.disabled = true;
+        else if (this.photosCurrentPage > 1)
+            this.backButton.disabled = false;
     }
 
     updateNextPage(images) {
-        if (images.length === 0 || images.slice(-1)[0].isLastImage) {
-            nextButton.disabled = true;
-        }
-        else {
-            nextButton.disabled = false;
-        }
-
+        if (images.length === 0 || images.slice(-1)[0].isLastImage)
+            this.nextButton.disabled = true;
+        else
+            this.nextButton.disabled = false;
     }
 
     drawImages(images) {
@@ -91,7 +104,17 @@ export class Photos {
             `;
             content += imageDiv;
         })
-        document.querySelector('#container').innerHTML = content;
+        this.photosContainer.innerHTML = content;
     }
 
-} 
+    getPhotosStartIndex() {
+        if (this.photosCurrentPage === 1)
+            return 0;
+        else
+            return (this.photosCurrentPage - 1) * this.photosPerPage;
+    }
+
+    getPhotosEndIndex() {
+        return this.getPhotosStartIndex() + this.photosPerPage;
+    }
+}
