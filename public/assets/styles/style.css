@@ -2,11 +2,26 @@
   --green-light: #1fb123;
   --page-margin-left: 5px;
 
-  --menu-bar-button-height: 20px;
+  --menu-bar-button-width: 80px;
+  --menu-bar-button-height: 40px;
   --menu-bar-margin-vertical: 5px;
   --menu-bar-height: calc(var(--menu-bar-button-height) + var(--menu-bar-margin-vertical) * 2);
 
+  --thumbnail-margin: 5px;
+  --thumbnail-image-height: 300px;
+  --thumbnail-image-width: 300px;
+  --thumbnail-border: 1px;
+  --thumbnail-description-height: 30px;
+
+  --thumbnail-total-height: calc(var(--thumbnail-image-height) + var(--thumbnail-border) * 3 + var(--thumbnail-description-height));
+  --thumbnail-total-width: calc(var(--thumbnail-image-width) + var(--thumbnail-border) * 2);
+
   --container-margin-top: 10px;
+}
+
+#css-value-calculator{
+  height: var(--thumbnail-total-height);
+  background-color: red;
 }
 
 body{
@@ -21,34 +36,40 @@ body{
   display: none;
 }
 
-.responsive {
-  margin: 5px;
+.thumbnail {
+  margin: var(--thumbnail-margin);
   float: left;
-  border: 1px solid #ccc;
+  border: var(--thumbnail-border) solid #ccc;
+  height: calc(var(--thumbnail-image-height) + var(--thumbnail-border) + var(--thumbnail-description-height));
+  width: var(--thumbnail-image-width);
 }
 
-.responsive:hover,
-.responsive:hover .gallery {
-  border: 1px solid #777;
+.thumbnail > .image:hover {
   cursor: pointer;
 }
 
-div.gallery {
+.thumbnail > .image {
   display: table-cell;
-  height: 300px;
-  width: 300px;
+  height: var(--thumbnail-image-height);
+  width: var(--thumbnail-image-width);
   text-align: center;
   vertical-align: middle;
-  border: 1px solid #ccc;
+  border-bottom: var(--thumbnail-border) solid #ccc;
 }
 
-div.gallery img {
+.thumbnail > .image > img {
   max-width:100%; 
   max-height:100%;
 }
 
 div.desc {
-  display: block;
+  font-size: 20px;
+  height: var(--thumbnail-description-height);
+  width: var(--thumbnail-image-width);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
 }
 
@@ -67,6 +88,7 @@ div.desc {
   color: white;
   font-size: 14px;
   height: var(--menu-bar-button-height);
+  width: var(--menu-bar-button-width);
 }
 
 .slideshow {
@@ -86,6 +108,7 @@ div.desc {
   margin: 5px 0px 5px 5px;
   color: white;
   font-size: 14px;
+  height: 40px;
 }
 
 button {

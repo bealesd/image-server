@@ -36,6 +36,7 @@ function getDirectoryListing(dir) {
 class ImageService {
     getImages(startIndex, endIndex) {      
         const images = glob.sync([__dirname, `images${path.sep}**`, `*.{${imagesWhitelist.join(',')}}`].join(path.sep));
+        // what order do these image come back in
         const imageList = [];
 
         if (startIndex < 0 || startIndex > images.length - 1 || endIndex <= startIndex)
@@ -48,11 +49,6 @@ class ImageService {
             const pathParts = image.split(path.sep);
 
             const imageName = pathParts[pathParts.length - 1];
-            const stats = fs.statSync(image);
-
-            const day = stats.mtime.getDate();
-            const month = stats.mtime.getMonth() + 1;
-            const year = stats.mtime.getFullYear();
 
             let id = `${image.replace(`${__dirname}${path.sep}`, '')}`;
             id = id.split(path.sep).join(htmlSeparator);
@@ -60,9 +56,6 @@ class ImageService {
             imageList.push({
                 id: id,
                 name: imageName,
-                day: day,
-                month: month,
-                year: year,
                 isLastImage: i === (images.length - 1)
             });
         }

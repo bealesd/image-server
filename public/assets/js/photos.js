@@ -1,120 +1,139 @@
+import { Utilities } from './utilities.js';
+// todo, resizing the screen stops new images being fetched
+// listen to page resizes, then recalculate calculateViewableThumbnails()
 export class Photos {
-    photosPerPage = 10;
-    photosCurrentPage = 1;
+    photosPerColumn = 1;
+    startIndex = 0;
 
-    photoControlsContainerHtml = `
-        <div class="photo-controls-container">
-            <h1 class="page-number"></h1>
-            <button class="green-button" id="back">Back</button>
-            <button class="green-button" id="next">Next</button>
-        </div>
-        <div class="photos-container"></div>
-    `;
+    active = true;
+
+    scrollY = {
+        current: 0,
+        max: 0,
+        ticking: true
+    };
+
+    photoControlsContainerHtml = `<div class="photos-container"></div>`;
 
     constructor(containerElement) {
         this.container = containerElement;
     }
 
     load() {
+        this.active = true;
         this.container.innerHTML = this.photoControlsContainerHtml;
 
-        this.photoControlsContainer = document.querySelector('.photo-controls-container');
         this.photosContainer = document.querySelector('.photos-container');
-
-        this.backButton = document.querySelector('#back');
-        this.nextButton = document.querySelector('#next');
-
-        this.pageNumber = document.querySelector('.page-number');
 
         this.loadPage();
         this.registerEventListeners();
     }
 
-    unload(){
+    unload() {
+        this.active = false;
         this.container.innerHTML = '';
+
+        this.unregisterEventListeners();
     }
 
     registerEventListeners() {
-        this.backButton.addEventListener('click', async () => {
-            this.updatePageNumber({ direction: 'back' });
-            await this.loadPage();
-        });
+        document.addEventListener('scroll', async () => {
+            if(this.scrollY.ticking){
+                console.log('ticking');
+                return;
+            }
 
-        this.nextButton.addEventListener('click', async () => {
-            this.updatePageNumber({ direction: 'next' });
-            await this.loadPage();
+            const previousScrollY = this.scrollY.current;
+            this.scrollY.current = window.scrollY;
+
+            const actualMaxScrollHeight = document.body.scrollHeight - window.innerHeight;
+
+            if (this.scrollY.current > previousScrollY && this.scrollY.current > this.scrollY.max && (actualMaxScrollHeight - this.scrollY.current) < 100){
+                this.scrollY.max = this.scrollY.current;
+                console.log('get images');
+                this.updatePage();
+            }
+            else {
+                console.log('dont get images');
+            }
         });
+    }
+
+    unregisterEventListeners(){
+        // todo, unregister scroll event
+    }
+
+    calculateViewableThumbnails() {
+        // the number of thumbnails that can be shown on page
+        const usedHeight = document.body.offsetHeight
+        const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+
+        const availableHeight = windowHeight - usedHeight;
+        const availableWidth = windowWidth;
+
+        const thumbnailHeight = Utilities.getCSSVariable('thumbnail-total-height');
+        const thumbnailWidth = Utilities.getCSSVariable('thumbnail-total-width');
+        const thumbnailMargin = Utilities.getCSSVariable('thumbnail-margin');
+
+        return {
+            rows: Math.ceil(availableHeight / (thumbnailHeight + thumbnailMargin * 2)),
+            columns: Math.floor(availableWidth / (thumbnailWidth + thumbnailMargin * 2))
+        }
     }
 
     async loadPage() {
-        this.printPageNumber();
+        let viewableThumbnails = this.calculateViewableThumbnails();
+        this.startIndex = 0;
+        this.photosPerColumn = viewableThumbnails.columns > 0 ? viewableThumbnails.columns : 1;
 
-        let result = await this.getImages(this.getPhotosStartIndex(), this.getPhotosEndIndex());
+        const rows = viewableThumbnails.rows > 0 ? viewableThumbnails.rows : 1;
+
+        let endIndex = rows * this.photosPerColumn;
+
+        let result = await this.getImages(this.startIndex, endIndex);
+        this.startIndex = endIndex;
+
         this.drawImages(result);
-
-        this.updatePhotoControlsContainer(result);
     }
 
-    printPageNumber() {
-        this.pageNumber.innerHTML = `Page ${this.photosCurrentPage}`;
-    }
+    async updatePage() {
+        let endIndex = this.startIndex + 1 * this.photosPerColumn;
 
-    updatePageNumber(option) {
-        if (option.direction === 'next')
-            this.photosCurrentPage++;
-        else if (option.direction === 'back')
-            this.photosCurrentPage--;
+        let result = await this.getImages(this.startIndex, endIndex);
+        this.startIndex = endIndex;
+
+        this.drawImages(result);
     }
 
     async getImages(startIndex, endIndex) {
+        this.scrollY.ticking = true;
+
         let req = await fetch(`./images?startIndex=${startIndex}&endIndex=${endIndex}`);
         let images = await req.json();
+
+        this.scrollY.ticking = false;
+
         return images;
     }
 
-    updatePhotoControlsContainer(images) {
-        this.updateBackPage();
-        this.updateNextPage(images);
-    }
-
-    updateBackPage() {
-        if (this.photosCurrentPage === 1)
-            this.backButton.disabled = true;
-        else if (this.photosCurrentPage > 1)
-            this.backButton.disabled = false;
-    }
-
-    updateNextPage(images) {
-        if (images.length === 0 || images.slice(-1)[0].isLastImage)
-            this.nextButton.disabled = true;
-        else
-            this.nextButton.disabled = false;
+    createThumbnail(id, name) {
+        return `<div class="thumbnail" onclick="window.open('image?id=${id}')">
+                    <div class="image">
+                        <img src="image?id=${id}" alt="${name}" title="${id}">
+                    </div>
+                    <div class="desc">${name}</div>
+                </div>`;
     }
 
     drawImages(images) {
+        if (!this.active) return;
+
         let content = '';
         images.forEach((img) => {
-            let imageDiv = `
-            <div class="responsive" onclick="window.open('image?id=${img.id}')">
-                <div class="gallery">
-                    <img align="middle" src="image?id=${img.id}" alt="${img.name}" title="${img.day}/${img.month}/${img.year}">
-                </div>
-                <div class="desc">${img.name}</div>
-            </div>
-            `;
+            let imageDiv = this.createThumbnail(img.id, img.name);
             content += imageDiv;
         })
-        this.photosContainer.innerHTML = content;
-    }
-
-    getPhotosStartIndex() {
-        if (this.photosCurrentPage === 1)
-            return 0;
-        else
-            return (this.photosCurrentPage - 1) * this.photosPerPage;
-    }
-
-    getPhotosEndIndex() {
-        return this.getPhotosStartIndex() + this.photosPerPage;
+        this.photosContainer.innerHTML += content;
     }
 }

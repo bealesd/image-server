@@ -19,6 +19,8 @@
     <div id="container">
     </div>
 
+    <div id="css-value-calculator" hidden style="display:none;"></div>
+
     <script type="module">
         // create a private folder locally for images you don't want shown
         // split into more js files
@@ -40,6 +42,17 @@
         const albumsButton = document.querySelector('#albums');
         const slideshowButton = document.querySelector('#slideshow');
 
+        
+
+        // function getCSSVariable(variable) {
+        //     // only works with pixels
+        //     let rawVariable = getComputedStyle(document.body).getPropertyValue(`--${variable}`).replace('calc', '');
+        //     while (rawVariable.includes('px'))
+        //         rawVariable = rawVariable.replace('px', '');
+            
+        //     return eval(rawVariable);
+        // }
+
         async function getImage() {
             let req = await fetch(`./images?startIndex=${slideshowImageIndex}&endIndex=${slideshowImageIndex + 1}`);
             let images = await req.json();
@@ -52,7 +65,7 @@
 
             images.forEach((img) => {
                 let imageDiv = `<div class="slideshow">
-                                 <img src="image?id=${img.id}" alt="${img.name}" title="${img.name}">
+                                 <img src="image?id=${img.id}" alt="${img.name}" title="${img.id}">
                             </div>`;
                 content += imageDiv;
             })
@@ -70,11 +83,11 @@
             let content = '';
             images.forEach((img) => {
                 let imageDiv = `
-                <div class="responsive" onclick="window.open('image?id=${img.id}')">
-                    <div class="gallery">
-                        <img align="middle" src="image?id=${img.id}" alt="${img.name}" title="${img.day}/${img.month}/${img.year}">
+                <div class="thumbnail" onclick="window.open('image?id=${img.id}')">
+                    <div class="image">
+                        <img align="middle" src="image?id=${img.id}" alt="${img.name}" title="${img.id}">
                     </div>
-                    <div class="desc">${img.name}</div>
+                    <div class="desc"><div>${img.name}</div></div>
                 </div>
                 `;
                 content += imageDiv;
@@ -131,10 +144,10 @@
             let directories = await request.json();
             document.querySelector('#container').innerHTML = '';
 
-            directories = directories.filter((dir)=>{
-                if(images && dir.isFile === true)
+            directories = directories.filter((dir) => {
+                if (images && dir.isFile === true)
                     return imagesWhitelist.includes(dir.id.split('.').slice(-1)[0].toLowerCase())
-                else 
+                else
                     return true;
             })
 
@@ -163,9 +176,9 @@
                 let dirDiv = '';
                 if (images) {
                     dirDiv = `
-                        <div class="responsive" onclick="window.open('image?id=${dir.id}')">
-                            <div class="gallery">
-                                <img align="middle" src="image?id=${dir.id}" alt="${dir.name}" title="${dir.day}/${dir.month}/${dir.year}">
+                        <div class="thumbnail" onclick="window.open('image?id=${dir.id}')">
+                            <div class="image">
+                                <img align="middle" src="image?id=${dir.id}" alt="${dir.name}" title="${dir.id}">
                             </div>
                             <div class="desc">${dir.name}</div>
                         </div>
